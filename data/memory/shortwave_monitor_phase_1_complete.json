@@ -1,0 +1,10 @@
+{
+  "key": "phase_1_complete",
+  "data": {
+    "timestamp": "2025-06-13T04:48:51.519Z",
+    "sdr_count": 0,
+    "signal": true
+  },
+  "timestamp": "2025-06-13T04:48:51.519Z",
+  "namespace": "shortwave_monitor"
+}

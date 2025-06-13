@@ -1,0 +1,57 @@
+{
+  "key": "report_ready",
+  "data": {
+    "url": "http://localhost:3000",
+    "timestamp": "2025-06-13T12:58:54.429Z",
+    "summary": {
+      "totalSDRs": 3,
+      "totalSamples": 3,
+      "totalAnalyses": 3,
+      "keyFindings": [
+        "Monitored 3 active SDR receivers across 3 geographic locations",
+        "Captured 3 audio samples spanning HF voice, broadcast, CW/digital, and utility frequencies",
+        "Identified 3 unique stations with 1 languages detected",
+        "Overall system quality score: 87/100"
+      ],
+      "notableActivity": [
+        {
+          "type": "voice",
+          "confidence": 88,
+          "stations": [
+            "W1ABC"
+          ],
+          "language": "english"
+        },
+        {
+          "type": "broadcast",
+          "confidence": 95,
+          "stations": [
+            "BBC World Service"
+          ],
+          "language": "english"
+        },
+        {
+          "type": "cw",
+          "confidence": 82,
+          "stations": [
+            "K6XYZ"
+          ],
+          "language": "unknown"
+        }
+      ],
+      "coverageAreas": [
+        "University of Twente, Netherlands",
+        "Hungary",
+        "California, USA"
+      ],
+      "detectedLanguages": [
+        "english"
+      ],
+      "stationCount": 3,
+      "qualityScore": 87
+    },
+    "signal": true
+  },
+  "timestamp": "2025-06-13T12:58:54.429Z",
+  "namespace": "shortwave_monitor"
+}

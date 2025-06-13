@@ -1,0 +1,10 @@
+{
+  "key": "sparc_start",
+  "data": {
+    "timestamp": "2025-06-13T04:48:50.508Z",
+    "orchestrator": "active",
+    "phase": "initialization"
+  },
+  "timestamp": "2025-06-13T04:48:50.508Z",
+  "namespace": "shortwave_monitor"
+}

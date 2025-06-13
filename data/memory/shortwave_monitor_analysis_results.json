@@ -1,0 +1,79 @@
+{
+  "key": "analysis_results",
+  "data": [
+    {
+      "sample_id": "hf_voice_netherlands_2024",
+      "filename": "hf_voice_netherlands_2024.wav",
+      "metadata": {
+        "frequency": 14250000,
+        "mode": "usb",
+        "bandwidth": 3000,
+        "duration": 60,
+        "sampleRate": 16000,
+        "timestamp": "2025-06-13T12:58:54.387Z",
+        "quality_estimate": 85
+      },
+      "analysis_results": {
+        "content_type": "voice",
+        "language": "english",
+        "transcription": "CQ CQ CQ de W1ABC W1ABC calling CQ and standing by",
+        "stations": [
+          "W1ABC"
+        ],
+        "quality_score": 85,
+        "timestamp": "2025-06-13T12:58:54.387Z",
+        "confidence": 88
+      }
+    },
+    {
+      "sample_id": "broadcast_hungary_2024",
+      "filename": "broadcast_hungary_2024.wav",
+      "metadata": {
+        "frequency": 9500000,
+        "mode": "am",
+        "bandwidth": 5000,
+        "duration": 60,
+        "sampleRate": 16000,
+        "timestamp": "2025-06-13T12:58:54.387Z",
+        "quality_estimate": 78
+      },
+      "analysis_results": {
+        "content_type": "broadcast",
+        "language": "english",
+        "transcription": "This is BBC World Service broadcasting from London with news and current affairs",
+        "stations": [
+          "BBC World Service"
+        ],
+        "quality_score": 78,
+        "timestamp": "2025-06-13T12:58:54.387Z",
+        "confidence": 95
+      }
+    },
+    {
+      "sample_id": "cw_digital_usa_2024",
+      "filename": "cw_digital_usa_2024.wav",
+      "metadata": {
+        "frequency": 14030000,
+        "mode": "cw",
+        "bandwidth": 500,
+        "duration": 60,
+        "sampleRate": 16000,
+        "timestamp": "2025-06-13T12:58:54.387Z",
+        "quality_estimate": 92
+      },
+      "analysis_results": {
+        "content_type": "cw",
+        "language": "unknown",
+        "transcription": "QRT QRT DE K6XYZ K6XYZ 73",
+        "stations": [
+          "K6XYZ"
+        ],
+        "quality_score": 92,
+        "timestamp": "2025-06-13T12:58:54.387Z",
+        "confidence": 82
+      }
+    }
+  ],
+  "timestamp": "2025-06-13T12:58:54.388Z",
+  "namespace": "shortwave_monitor"
+}

@@ -1,0 +1,333 @@
+{
+  "key": "report_data",
+  "data": {
+    "timestamp": "2025-06-13T12:58:54.389Z",
+    "activeSDRs": [
+      {
+        "url": "http://websdr.ewi.utwente.nl:8901/",
+        "location": "University of Twente, Netherlands",
+        "frequencies": [
+          "80m",
+          "40m",
+          "20m",
+          "15m",
+          "10m"
+        ],
+        "quality_score": 95,
+        "last_checked": "2025-06-13T12:58:54.386Z",
+        "network": "WebSDR",
+        "status": "online",
+        "response_time": 850
+      },
+      {
+        "url": "http://rx.linkfanel.net/",
+        "location": "Hungary",
+        "frequencies": [
+          "80m",
+          "40m",
+          "20m",
+          "15m",
+          "10m"
+        ],
+        "quality_score": 88,
+        "last_checked": "2025-06-13T12:58:54.387Z",
+        "network": "WebSDR",
+        "status": "online",
+        "response_time": 1200
+      },
+      {
+        "url": "http://kiwisdr.example.com:8073/",
+        "location": "California, USA",
+        "frequencies": [
+          "80m",
+          "40m",
+          "20m",
+          "15m",
+          "10m"
+        ],
+        "quality_score": 82,
+        "last_checked": "2025-06-13T12:58:54.387Z",
+        "network": "KiwiSDR",
+        "status": "online",
+        "response_time": 750
+      }
+    ],
+    "audioSamples": [
+      {
+        "id": "hf_voice_netherlands_2024",
+        "filename": "hf_voice_netherlands_2024.wav",
+        "sdr": "University of Twente, Netherlands",
+        "frequency": 14250000,
+        "type": "hf_voice",
+        "duration": 60,
+        "quality": 85,
+        "analysis": {
+          "content_type": "voice",
+          "language": "english",
+          "transcription": "CQ CQ CQ de W1ABC W1ABC calling CQ and standing by",
+          "stations": [
+            "W1ABC"
+          ],
+          "quality_score": 85,
+          "timestamp": "2025-06-13T12:58:54.387Z",
+          "confidence": 88
+        },
+        "playable": true
+      },
+      {
+        "id": "broadcast_hungary_2024",
+        "filename": "broadcast_hungary_2024.wav",
+        "sdr": "Hungary",
+        "frequency": 9500000,
+        "type": "broadcast",
+        "duration": 60,
+        "quality": 78,
+        "analysis": {
+          "content_type": "broadcast",
+          "language": "english",
+          "transcription": "This is BBC World Service broadcasting from London with news and current affairs",
+          "stations": [
+            "BBC World Service"
+          ],
+          "quality_score": 78,
+          "timestamp": "2025-06-13T12:58:54.387Z",
+          "confidence": 95
+        },
+        "playable": true
+      },
+      {
+        "id": "cw_digital_usa_2024",
+        "filename": "cw_digital_usa_2024.wav",
+        "sdr": "California, USA",
+        "frequency": 14030000,
+        "type": "cw_digital",
+        "duration": 60,
+        "quality": 92,
+        "analysis": {
+          "content_type": "cw",
+          "language": "unknown",
+          "transcription": "QRT QRT DE K6XYZ K6XYZ 73",
+          "stations": [
+            "K6XYZ"
+          ],
+          "quality_score": 92,
+          "timestamp": "2025-06-13T12:58:54.387Z",
+          "confidence": 82
+        },
+        "playable": true
+      }
+    ],
+    "analysisResults": [
+      {
+        "sample_id": "hf_voice_netherlands_2024",
+        "filename": "hf_voice_netherlands_2024.wav",
+        "metadata": {
+          "frequency": 14250000,
+          "mode": "usb",
+          "bandwidth": 3000,
+          "duration": 60,
+          "sampleRate": 16000,
+          "timestamp": "2025-06-13T12:58:54.387Z",
+          "quality_estimate": 85
+        },
+        "analysis_results": {
+          "content_type": "voice",
+          "language": "english",
+          "transcription": "CQ CQ CQ de W1ABC W1ABC calling CQ and standing by",
+          "stations": [
+            "W1ABC"
+          ],
+          "quality_score": 85,
+          "timestamp": "2025-06-13T12:58:54.387Z",
+          "confidence": 88
+        }
+      },
+      {
+        "sample_id": "broadcast_hungary_2024",
+        "filename": "broadcast_hungary_2024.wav",
+        "metadata": {
+          "frequency": 9500000,
+          "mode": "am",
+          "bandwidth": 5000,
+          "duration": 60,
+          "sampleRate": 16000,
+          "timestamp": "2025-06-13T12:58:54.387Z",
+          "quality_estimate": 78
+        },
+        "analysis_results": {
+          "content_type": "broadcast",
+          "language": "english",
+          "transcription": "This is BBC World Service broadcasting from London with news and current affairs",
+          "stations": [
+            "BBC World Service"
+          ],
+          "quality_score": 78,
+          "timestamp": "2025-06-13T12:58:54.387Z",
+          "confidence": 95
+        }
+      },
+      {
+        "sample_id": "cw_digital_usa_2024",
+        "filename": "cw_digital_usa_2024.wav",
+        "metadata": {
+          "frequency": 14030000,
+          "mode": "cw",
+          "bandwidth": 500,
+          "duration": 60,
+          "sampleRate": 16000,
+          "timestamp": "2025-06-13T12:58:54.387Z",
+          "quality_estimate": 92
+        },
+        "analysis_results": {
+          "content_type": "cw",
+          "language": "unknown",
+          "transcription": "QRT QRT DE K6XYZ K6XYZ 73",
+          "stations": [
+            "K6XYZ"
+          ],
+          "quality_score": 92,
+          "timestamp": "2025-06-13T12:58:54.387Z",
+          "confidence": 82
+        }
+      }
+    ],
+    "summary": {
+      "totalSDRs": 3,
+      "totalSamples": 3,
+      "totalAnalyses": 3,
+      "keyFindings": [
+        "Monitored 3 active SDR receivers across 3 geographic locations",
+        "Captured 3 audio samples spanning HF voice, broadcast, CW/digital, and utility frequencies",
+        "Identified 3 unique stations with 1 languages detected",
+        "Overall system quality score: 87/100"
+      ],
+      "notableActivity": [
+        {
+          "type": "voice",
+          "confidence": 88,
+          "stations": [
+            "W1ABC"
+          ],
+          "language": "english"
+        },
+        {
+          "type": "broadcast",
+          "confidence": 95,
+          "stations": [
+            "BBC World Service"
+          ],
+          "language": "english"
+        },
+        {
+          "type": "cw",
+          "confidence": 82,
+          "stations": [
+            "K6XYZ"
+          ],
+          "language": "unknown"
+        }
+      ],
+      "coverageAreas": [
+        "University of Twente, Netherlands",
+        "Hungary",
+        "California, USA"
+      ],
+      "detectedLanguages": [
+        "english"
+      ],
+      "stationCount": 3,
+      "qualityScore": 87
+    },
+    "coverage": {
+      "totalLocations": 3,
+      "regions": {
+        "Europe": [
+          {
+            "url": "http://websdr.ewi.utwente.nl:8901/",
+            "location": "University of Twente, Netherlands",
+            "frequencies": [
+              "80m",
+              "40m",
+              "20m",
+              "15m",
+              "10m"
+            ],
+            "quality_score": 95,
+            "last_checked": "2025-06-13T12:58:54.386Z",
+            "network": "WebSDR",
+            "status": "online",
+            "response_time": 850
+          }
+        ],
+        "Other": [
+          {
+            "url": "http://rx.linkfanel.net/",
+            "location": "Hungary",
+            "frequencies": [
+              "80m",
+              "40m",
+              "20m",
+              "15m",
+              "10m"
+            ],
+            "quality_score": 88,
+            "last_checked": "2025-06-13T12:58:54.387Z",
+            "network": "WebSDR",
+            "status": "online",
+            "response_time": 1200
+          }
+        ],
+        "North America": [
+          {
+            "url": "http://kiwisdr.example.com:8073/",
+            "location": "California, USA",
+            "frequencies": [
+              "80m",
+              "40m",
+              "20m",
+              "15m",
+              "10m"
+            ],
+            "quality_score": 82,
+            "last_checked": "2025-06-13T12:58:54.387Z",
+            "network": "KiwiSDR",
+            "status": "online",
+            "response_time": 750
+          }
+        ]
+      },
+      "networkDistribution": {
+        "WebSDR": 2,
+        "KiwiSDR": 1
+      },
+      "qualityDistribution": {
+        "Excellent": 3
+      }
+    },
+    "analysis": {
+      "contentTypes": {
+        "voice": 1,
+        "broadcast": 1,
+        "cw": 1
+      },
+      "languages": {
+        "english": 2
+      },
+      "averageConfidence": 88,
+      "stationsByType": {
+        "voice": [
+          "W1ABC"
+        ],
+        "broadcast": [
+          "BBC World Service"
+        ],
+        "cw": [
+          "K6XYZ"
+        ]
+      },
+      "trends": []
+    }
+  },
+  "timestamp": "2025-06-13T12:58:54.429Z",
+  "namespace": "shortwave_monitor"
+}

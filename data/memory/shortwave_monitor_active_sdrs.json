@@ -1,0 +1,55 @@
+{
+  "key": "active_sdrs",
+  "data": [
+    {
+      "url": "http://websdr.ewi.utwente.nl:8901/",
+      "location": "University of Twente, Netherlands",
+      "frequencies": [
+        "80m",
+        "40m",
+        "20m",
+        "15m",
+        "10m"
+      ],
+      "quality_score": 95,
+      "last_checked": "2025-06-13T12:58:54.386Z",
+      "network": "WebSDR",
+      "status": "online",
+      "response_time": 850
+    },
+    {
+      "url": "http://rx.linkfanel.net/",
+      "location": "Hungary",
+      "frequencies": [
+        "80m",
+        "40m",
+        "20m",
+        "15m",
+        "10m"
+      ],
+      "quality_score": 88,
+      "last_checked": "2025-06-13T12:58:54.387Z",
+      "network": "WebSDR",
+      "status": "online",
+      "response_time": 1200
+    },
+    {
+      "url": "http://kiwisdr.example.com:8073/",
+      "location": "California, USA",
+      "frequencies": [
+        "80m",
+        "40m",
+        "20m",
+        "15m",
+        "10m"
+      ],
+      "quality_score": 82,
+      "last_checked": "2025-06-13T12:58:54.387Z",
+      "network": "KiwiSDR",
+      "status": "online",
+      "response_time": 750
+    }
+  ],
+  "timestamp": "2025-06-13T12:58:54.387Z",
+  "namespace": "shortwave_monitor"
+}

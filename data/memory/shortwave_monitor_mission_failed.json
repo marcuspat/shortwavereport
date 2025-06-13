@@ -1,0 +1,66 @@
+{
+  "key": "mission_failed",
+  "data": {
+    "timestamp": "2025-06-13T04:48:51.521Z",
+    "error": "No active SDRs available for capture",
+    "stack": "Error: No active SDRs available for capture\n    at AudioCaptureAgent.execute (file:///Users/mp/Documents/Code/claude-code/projects/shortwavereport/src/agents/audio-capture.js:46:15)\n    at async SPARCOrchestrator.executePhase2 (file:///Users/mp/Documents/Code/claude-code/projects/shortwavereport/src/orchestrator.js:166:29)\n    at async SPARCOrchestrator.execute (file:///Users/mp/Documents/Code/claude-code/projects/shortwavereport/src/orchestrator.js:42:7)",
+    "execution_log": [
+      {
+        "timestamp": "2025-06-13T04:48:50.506Z",
+        "component": "system_init",
+        "status": "starting",
+        "description": "System initialization"
+      },
+      {
+        "timestamp": "2025-06-13T04:48:50.509Z",
+        "component": "system_init",
+        "status": "completed",
+        "description": "System initialized successfully"
+      },
+      {
+        "timestamp": "2025-06-13T04:48:50.509Z",
+        "component": "phase_1",
+        "status": "starting",
+        "description": "SDR Discovery and Requirements Validation"
+      },
+      {
+        "timestamp": "2025-06-13T04:48:51.519Z",
+        "component": "sdr_discovery",
+        "status": "completed",
+        "description": "Found 0 active SDRs"
+      },
+      {
+        "timestamp": "2025-06-13T04:48:51.519Z",
+        "component": "requirements_validation",
+        "status": "completed",
+        "description": "System capabilities validated"
+      },
+      {
+        "timestamp": "2025-06-13T04:48:51.520Z",
+        "component": "phase_1",
+        "status": "completed",
+        "description": "Discovery phase successful"
+      },
+      {
+        "timestamp": "2025-06-13T04:48:51.520Z",
+        "component": "phase_2",
+        "status": "starting",
+        "description": "Audio capture and processing"
+      },
+      {
+        "timestamp": "2025-06-13T04:48:51.521Z",
+        "component": "phase_2",
+        "status": "failed",
+        "description": "No active SDRs available for capture"
+      },
+      {
+        "timestamp": "2025-06-13T04:48:51.521Z",
+        "component": "orchestration",
+        "status": "failed",
+        "description": "No active SDRs available for capture"
+      }
+    ]
+  },
+  "timestamp": "2025-06-13T04:48:51.521Z",
+  "namespace": "shortwave_monitor"
+}

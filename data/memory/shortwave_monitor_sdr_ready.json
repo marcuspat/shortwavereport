@@ -1,0 +1,10 @@
+{
+  "key": "sdr_ready",
+  "data": {
+    "count": 3,
+    "signal": true,
+    "timestamp": "2025-06-13T12:58:54.388Z"
+  },
+  "timestamp": "2025-06-13T12:58:54.388Z",
+  "namespace": "shortwave_monitor"
+}

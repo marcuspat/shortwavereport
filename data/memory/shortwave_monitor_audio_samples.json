@@ -1,0 +1,115 @@
+{
+  "key": "audio_samples",
+  "data": [
+    {
+      "id": "hf_voice_netherlands_2024",
+      "filename": "hf_voice_netherlands_2024.wav",
+      "filepath": "/data/audio/hf_voice_netherlands_2024.wav",
+      "sdr": {
+        "url": "http://websdr.ewi.utwente.nl:8901/",
+        "location": "University of Twente, Netherlands",
+        "frequencies": [
+          "80m",
+          "40m",
+          "20m",
+          "15m",
+          "10m"
+        ],
+        "quality_score": 95,
+        "last_checked": "2025-06-13T12:58:54.386Z",
+        "network": "WebSDR",
+        "status": "online",
+        "response_time": 850
+      },
+      "config": {
+        "frequency": 14250000,
+        "mode": "usb",
+        "type": "hf_voice"
+      },
+      "metadata": {
+        "frequency": 14250000,
+        "mode": "usb",
+        "bandwidth": 3000,
+        "duration": 60,
+        "sampleRate": 16000,
+        "timestamp": "2025-06-13T12:58:54.387Z",
+        "quality_estimate": 85
+      },
+      "processed": true
+    },
+    {
+      "id": "broadcast_hungary_2024",
+      "filename": "broadcast_hungary_2024.wav",
+      "filepath": "/data/audio/broadcast_hungary_2024.wav",
+      "sdr": {
+        "url": "http://rx.linkfanel.net/",
+        "location": "Hungary",
+        "frequencies": [
+          "80m",
+          "40m",
+          "20m",
+          "15m",
+          "10m"
+        ],
+        "quality_score": 88,
+        "last_checked": "2025-06-13T12:58:54.387Z",
+        "network": "WebSDR",
+        "status": "online",
+        "response_time": 1200
+      },
+      "config": {
+        "frequency": 9500000,
+        "mode": "am",
+        "type": "broadcast"
+      },
+      "metadata": {
+        "frequency": 9500000,
+        "mode": "am",
+        "bandwidth": 5000,
+        "duration": 60,
+        "sampleRate": 16000,
+        "timestamp": "2025-06-13T12:58:54.387Z",
+        "quality_estimate": 78
+      },
+      "processed": true
+    },
+    {
+      "id": "cw_digital_usa_2024",
+      "filename": "cw_digital_usa_2024.wav",
+      "filepath": "/data/audio/cw_digital_usa_2024.wav",
+      "sdr": {
+        "url": "http://kiwisdr.example.com:8073/",
+        "location": "California, USA",
+        "frequencies": [
+          "80m",
+          "40m",
+          "20m",
+          "15m",
+          "10m"
+        ],
+        "quality_score": 82,
+        "last_checked": "2025-06-13T12:58:54.387Z",
+        "network": "KiwiSDR",
+        "status": "online",
+        "response_time": 750
+      },
+      "config": {
+        "frequency": 14030000,
+        "mode": "cw",
+        "type": "cw_digital"
+      },
+      "metadata": {
+        "frequency": 14030000,
+        "mode": "cw",
+        "bandwidth": 500,
+        "duration": 60,
+        "sampleRate": 16000,
+        "timestamp": "2025-06-13T12:58:54.387Z",
+        "quality_estimate": 92
+      },
+      "processed": true
+    }
+  ],
+  "timestamp": "2025-06-13T12:58:54.387Z",
+  "namespace": "shortwave_monitor"
+}

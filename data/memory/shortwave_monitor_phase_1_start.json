@@ -1,0 +1,12 @@
+{
+  "key": "phase_1_start",
+  "data": {
+    "timestamp": "2025-06-13T04:48:50.509Z",
+    "tasks": [
+      "sdr_discovery",
+      "requirements_validation"
+    ]
+  },
+  "timestamp": "2025-06-13T04:48:50.509Z",
+  "namespace": "shortwave_monitor"
+}

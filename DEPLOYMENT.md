@@ -1,248 +1,491 @@
-# 🚀 Deployment Guide - Shortwave Monitor System
+# Shortwavereport Deployment Guide
 
-## ✅ System Status: **READY FOR DEPLOYMENT**
+This guide covers deployment options for the Shortwavereport system using Docker, Docker Compose, and CI/CD pipelines.
 
-The complete SPARC-enabled shortwave audio monitoring system has been successfully built and tested.
+## Table of Contents
 
-## 📦 What Was Built
+- [Quick Start](#quick-start)
+- [Docker Deployment](#docker-deployment)
+- [Docker Compose Deployment](#docker-compose-deployment)
+- [Production Deployment](#production-deployment)
+- [CI/CD Pipeline](#cicd-pipeline)
+- [Monitoring Setup](#monitoring-setup)
+- [Troubleshooting](#troubleshooting)
 
-### Core System Components
+## Quick Start
 
-1. **SPARC Orchestrator** (`src/orchestrator.js`)
-   - Main system coordinator
-   - 5-phase workflow execution
-   - Parallel agent coordination
-   - Error handling and recovery
+### Prerequisites
 
-2. **SDR Discovery Agent** (`src/agents/sdr-discovery.js`)
-   - WebSDR/KiwiSDR network scanning
-   - Quality scoring and ranking
-   - Real-time availability checking
+- Docker 20.10+ and Docker Compose 2.0+
+- Node.js 18+ (for local development)
+- Git
+- 4GB+ RAM, 20GB+ disk space
 
-3. **Audio Capture Agent** (`src/agents/audio-capture.js`)
-   - Multi-frequency audio sampling
-   - HF voice, broadcast, CW/digital, utility bands
-   - Audio processing pipeline
+### Local Development
 
-4. **Audio Analysis Agent** (`src/agents/audio-analysis.js`)
-   - Speech-to-text processing
-   - Language detection
-   - Station identification
-   - CW/digital mode decoding
-   - TDD-driven analysis pipeline
-
-5. **Report Generator Agent** (`src/agents/report-generator.js`)
-   - Interactive web dashboard
-   - Real-time intelligence reporting
-   - Executive summaries and visualizations
-
-6. **Memory Management System** (`src/memory/memory-manager.js`)
-   - Inter-agent communication
-   - State persistence
-   - Signal coordination
-
-### Supporting Infrastructure
-
-- **Comprehensive Test Suite** (149 tests covering all components)
-- **Demo System** with mock data
-- **Project Documentation** (README, deployment guides)
-- **SPARC Methodology Implementation**
-
-## 🎯 Deployment Options
-
-### Option 1: Quick Demo (Recommended for Testing)
 ```bash
-npm run demo
-# Starts with mock data, dashboard at http://localhost:3000
-```
+# Clone the repository
+git clone <repository-url>
+cd shortwavereport
 
-### Option 2: Full System Deployment
-```bash
-npm start
-# Requires network access to WebSDR instances
-```
+# Copy environment file
+cp .env.example .env.development
 
-### Option 3: Individual Agent Testing
-```bash
-npm run sdr-discovery    # Test SDR discovery only
-npm run audio-capture    # Test audio capture only
-npm run audio-analysis   # Test analysis engine only
-npm run report-generator # Test dashboard only
-```
-
-## 🔧 Configuration
-
-### Environment Setup
-```bash
-# Optional environment variables
-export PORT=3000                    # Dashboard port
-export SPARC_MEMORY_DIR=./data     # Memory storage
-export AUDIO_SAMPLE_RATE=16000     # Audio quality
-export CAPTURE_DURATION=60         # Sample length
-```
-
-### Network Requirements
-- HTTP/HTTPS access to WebSDR instances
-- Port 3000 available for dashboard
-- ffmpeg installed for audio processing
-
-## 📊 System Capabilities
-
-### Data Collection
-- **Real-time SDR monitoring** across global networks
-- **Multi-band audio capture** (HF voice, broadcast, CW, utility)
-- **Quality-based SDR selection** and optimization
-
-### Intelligence Processing
-- **Speech-to-text** for voice communications
-- **Language detection** (English, German, French, Spanish+)
-- **Station identification** (callsigns, broadcasters)
-- **CW/Morse decoding** and digital mode detection
-- **Confidence scoring** and quality assessment
-
-### Reporting & Visualization
-- **Interactive web dashboard** with real-time updates
-- **Executive summaries** with key findings
-- **Geographic coverage maps** showing SDR locations
-- **Content analysis charts** by type and language
-- **Audio sample playback** with metadata
-
-## 🧪 Testing & Validation
-
-### Test Coverage
-```bash
-npm test                 # Run all 149 tests
-npm run demo            # Demo with mock data
-```
-
-### Test Results Summary
-- ✅ **Orchestrator Tests**: 15 tests covering workflow coordination
-- ✅ **Agent Tests**: 134 tests covering all agent functionality
-- ✅ **Memory Tests**: Full coverage of state management
-- ✅ **Integration Tests**: End-to-end workflow validation
-
-### Demo Validation
-The demo successfully demonstrates:
-- Complete SPARC workflow execution
-- Agent coordination and memory management
-- Dashboard generation with realistic data
-- Error handling and graceful recovery
-
-## 📈 Performance Metrics
-
-### Typical Execution Times
-- **SDR Discovery**: 10-30 seconds (depends on network)
-- **Audio Capture**: 60 seconds per sample (configurable)
-- **Analysis Processing**: 5-15 seconds per sample
-- **Report Generation**: 2-5 seconds
-- **Total Workflow**: 3-5 minutes end-to-end
-
-### Resource Requirements
-- **Memory**: ~50MB base, +10MB per concurrent capture
-- **Storage**: ~1MB per audio sample, configurable retention
-- **Network**: HTTP requests to public SDR instances
-- **CPU**: Moderate usage for audio processing
-
-## 🛡️ Security & Privacy
-
-### Built-in Security Features
-- ✅ **No hardcoded credentials** or secrets
-- ✅ **Local processing only** - no cloud dependencies
-- ✅ **Memory encryption** for sensitive data
-- ✅ **Network isolation** - only accesses public SDRs
-- ✅ **Temporary storage** - no permanent audio retention
-- ✅ **Privacy-first design** - no personal data collection
-
-### Security Validations
-- All memory operations use encrypted storage
-- Network requests limited to known SDR networks
-- No external API dependencies for core functionality
-- Clean shutdown procedures implemented
-
-## 🚀 Production Deployment Steps
-
-### 1. Server Setup
-```bash
-# Clone and install
-git clone <repository>
-cd shortwave-monitor
+# Install dependencies
 npm install
 
-# Create required directories
+# Run in development mode
+npm run dev
+```
+
+### Docker Quick Start
+
+```bash
+# Build and run with Docker Compose
+docker-compose up -d
+
+# Check status
+docker-compose ps
+
+# View logs
+docker-compose logs -f shortwavereport
+
+# Access the application
+open http://localhost:3000
+```
+
+## Docker Deployment
+
+### Building the Image
+
+```bash
+# Build production image
+docker build -t shortwavereport:latest .
+
+# Build with specific target
+docker build --target production -t shortwavereport:prod .
+
+# Build development image
+docker build --target development -t shortwavereport:dev .
+```
+
+### Running Single Container
+
+```bash
+# Run production container
+docker run -d \
+  --name shortwavereport \
+  -p 3000:3000 \
+  -p 8080:8080 \
+  -v $(pwd)/data:/app/data \
+  -e NODE_ENV=production \
+  shortwavereport:latest
+
+# Run with environment file
+docker run -d \
+  --name shortwavereport \
+  -p 3000:3000 \
+  --env-file .env.production \
+  shortwavereport:latest
+```
+
+## Docker Compose Deployment
+
+### Development Environment
+
+```bash
+# Start development environment
+docker-compose --profile development up -d
+
+# This includes:
+# - Application in development mode
+# - Redis for caching
+# - Prometheus for metrics
+# - Grafana for monitoring
+```
+
+### Production Environment
+
+```bash
+# Start production environment
+docker-compose --profile production up -d
+
+# This includes:
+# - Application in production mode
+# - Redis for caching
+# - Prometheus for metrics
+# - Grafana for monitoring
+# - Nginx reverse proxy
+# - Node Exporter for system metrics
+```
+
+### Environment-Specific Configurations
+
+```bash
+# Production with custom compose file
+docker-compose -f docker-compose.yml -f docker-compose.prod.yml up -d
+
+# Scaling the application
+docker-compose up -d --scale shortwavereport=3
+```
+
+## Production Deployment
+
+### Server Requirements
+
+**Minimum Requirements:**
+- 2 CPU cores
+- 4GB RAM
+- 20GB disk space
+- Ubuntu 20.04+ or CentOS 8+
+
+**Recommended Requirements:**
+- 4+ CPU cores
+- 8GB+ RAM
+- 100GB+ SSD storage
+- Load balancer for high availability
+
+### Pre-deployment Setup
+
+```bash
+# Update system
+sudo apt update && sudo apt upgrade -y
+
+# Install Docker
+curl -fsSL https://get.docker.com -o get-docker.sh
+sudo sh get-docker.sh
+
+# Install Docker Compose
+sudo curl -L "https://github.com/docker/compose/releases/latest/download/docker-compose-$(uname -s)-$(uname -m)" -o /usr/local/bin/docker-compose
+sudo chmod +x /usr/local/bin/docker-compose
+
+# Create application user
+sudo useradd -m -s /bin/bash shortwavereport
+sudo usermod -aG docker shortwavereport
+
+# Create application directory
+sudo mkdir -p /opt/shortwavereport
+sudo chown shortwavereport:shortwavereport /opt/shortwavereport
+```
+
+### Production Deployment Steps
+
+```bash
+# Switch to application user
+sudo su - shortwavereport
+
+# Clone repository
+cd /opt/shortwavereport
+git clone <repository-url> .
+
+# Configure environment
+cp .env.example .env.production
+# Edit .env.production with production values
+
+# Create data directories
 mkdir -p data/{audio,analysis,memory,reports}
+mkdir -p logs
+
+# Set proper permissions
+chmod 755 data logs
+chmod 644 .env.production
+
+# Deploy using Docker Compose
+docker-compose -f docker-compose.yml --profile production up -d
+
+# Verify deployment
+docker-compose ps
+docker-compose logs -f
+```
+
+### SSL/TLS Configuration
+
+#### Using Let's Encrypt with Certbot
+
+```bash
+# Install Certbot
+sudo apt install certbot python3-certbot-nginx
+
+# Generate SSL certificate
+sudo certbot --nginx -d yourdomain.com
+
+# Update nginx configuration
+# Edit nginx/nginx.conf to enable SSL server block
+
+# Restart nginx container
+docker-compose restart nginx
+```
+
+#### Using Custom SSL Certificates
+
+```bash
+# Create SSL directory
+mkdir -p nginx/ssl
+
+# Copy certificates
+cp your-cert.pem nginx/ssl/cert.pem
+cp your-key.pem nginx/ssl/key.pem
 
 # Set permissions
-chmod 755 data
+chmod 600 nginx/ssl/*.pem
+
+# Update docker-compose.yml to mount SSL directory
+# Restart services
+docker-compose up -d
 ```
 
-### 2. System Configuration
+## CI/CD Pipeline
+
+The project includes GitHub Actions workflows for automated CI/CD.
+
+### GitHub Actions Setup
+
+1. **Repository Secrets**
+   ```
+   GITHUB_TOKEN (automatically provided)
+   SLACK_WEBHOOK_URL (for notifications)
+   STAGING_URL (staging environment URL)
+   PRODUCTION_URL (production environment URL)
+   ```
+
+2. **Environment Variables**
+   ```
+   STAGING_URL (in staging environment)
+   PRODUCTION_URL (in production environment)
+   ```
+
+### Workflow Triggers
+
+- **Continuous Integration**: Runs on push/PR to main/develop branches
+- **Staging Deployment**: Automatic on push to develop branch
+- **Production Deployment**: Automatic on release publication
+
+### Pipeline Stages
+
+1. **Test and Build**
+   - Code linting and type checking
+   - Unit and integration tests
+   - Security audit
+   - Multi-Node.js version testing
+
+2. **Docker Build**
+   - Multi-architecture builds (AMD64/ARM64)
+   - Container security scanning
+   - Image registry push
+
+3. **Deployment**
+   - Staging deployment (develop branch)
+   - Production deployment (releases)
+   - Health checks and smoke tests
+
+### Manual Deployment
+
 ```bash
-# Optional: Configure environment
-cp .env.example .env
-# Edit .env with your preferences
+# Build and push manually
+docker build -t ghcr.io/yourorg/shortwavereport:latest .
+docker push ghcr.io/yourorg/shortwavereport:latest
+
+# Deploy to production
+docker-compose pull
+docker-compose up -d
 ```
 
-### 3. Health Check
+## Monitoring Setup
+
+### Prometheus Configuration
+
+The system includes pre-configured Prometheus monitoring:
+
+- Application metrics: `http://localhost:9090`
+- System metrics via Node Exporter
+- Custom business metrics
+
+### Grafana Dashboards
+
+- Access: `http://localhost:3001`
+- Default credentials: `admin` / `shortwavereport123`
+- Pre-configured dashboards for system overview
+
+### Health Monitoring
+
+Built-in health check endpoints:
+
 ```bash
-# Verify installation
-npm run demo
-# Should show dashboard at http://localhost:3000
+# Health check
+curl http://localhost:3000/health
+
+# Readiness check
+curl http://localhost:3000/ready
+
+# Liveness check
+curl http://localhost:3000/live
+
+# Metrics
+curl http://localhost:3000/metrics
+
+# System status
+curl http://localhost:3000/status
 ```
 
-### 4. Production Start
+### Log Management
+
 ```bash
-# Start full system
-npm start
+# View application logs
+docker-compose logs -f shortwavereport
 
-# Or use process manager
-pm2 start src/orchestrator.js --name "shortwave-monitor"
+# View all service logs
+docker-compose logs -f
+
+# Log rotation is handled automatically by Docker
+# Configure external log aggregation for production
 ```
 
-### 5. Monitoring
+## Troubleshooting
+
+### Common Issues
+
+**Container fails to start:**
 ```bash
 # Check logs
-tail -f data/logs/system.log
+docker-compose logs shortwavereport
 
-# Monitor memory usage
-npm run status
+# Check resource usage
+docker stats
+
+# Verify environment variables
+docker-compose config
 ```
 
-## 🔄 Maintenance
+**Health checks failing:**
+```bash
+# Test health endpoint directly
+curl -i http://localhost:3000/health
 
-### Regular Operations
-- **Memory cleanup**: Automated, configurable retention
-- **Log rotation**: Built-in log management
-- **Health monitoring**: Self-diagnostics included
+# Check container health
+docker inspect --format='{{.State.Health.Status}}' shortwavereport
 
-### Updates and Scaling
-- **Modular architecture**: Individual agents can be updated
-- **Horizontal scaling**: Multiple instances supported
-- **Configuration updates**: Hot-reload capabilities
+# View health check logs
+docker inspect --format='{{range .State.Health.Log}}{{.Output}}{{end}}' shortwavereport
+```
 
-## 📞 Support
+**Performance issues:**
+```bash
+# Monitor resource usage
+docker stats shortwavereport
 
-### Troubleshooting
-- Check `README.md` for common issues
-- Review logs in `data/logs/`
-- Run `npm run demo` to verify installation
+# Check memory usage
+curl http://localhost:3000/metrics | grep memory
 
-### System Monitoring
-- Dashboard provides real-time system status
-- Memory manager tracks agent coordination
-- Built-in error reporting and recovery
+# Review configuration
+docker-compose exec shortwavereport cat /app/config/app.config.js
+```
 
----
+**Audio processing problems:**
+```bash
+# Verify FFmpeg installation
+docker-compose exec shortwavereport ffmpeg -version
 
-## 🎉 Deployment Complete!
+# Check audio directory permissions
+docker-compose exec shortwavereport ls -la /app/data/audio
 
-**Status**: ✅ **READY FOR PRODUCTION**
+# Review audio processing logs
+docker-compose logs shortwavereport | grep audio
+```
 
-Your SPARC-enabled shortwave audio monitoring system is fully operational and ready for deployment. The system successfully demonstrates:
+### Debugging Commands
 
-- Complete SPARC methodology implementation
-- Multi-agent coordination with parallel processing
-- Real-time intelligence collection and analysis
-- Interactive web-based reporting and visualization
-- Comprehensive testing and validation
+```bash
+# Access container shell
+docker-compose exec shortwavereport /bin/bash
 
-**Next Steps**: Run `npm run demo` to see the system in action!
+# Check application status
+docker-compose exec shortwavereport npm run status
+
+# View configuration
+docker-compose exec shortwavereport node -e "console.log(require('./config/app.config.js').default)"
+
+# Test SDR connectivity
+docker-compose exec shortwavereport node -e "
+const agent = require('./src/agents/sdr-discovery.js');
+new agent.default().execute().then(console.log).catch(console.error);
+"
+```
+
+### Performance Optimization
+
+```bash
+# Optimize Docker images
+docker system prune -f
+docker image prune -f
+
+# Update resource limits in docker-compose.yml
+services:
+  shortwavereport:
+    deploy:
+      resources:
+        limits:
+          memory: 2G
+          cpus: '1.0'
+        reservations:
+          memory: 1G
+          cpus: '0.5'
+```
+
+### Backup and Recovery
+
+```bash
+# Backup data directory
+tar -czf backup-$(date +%Y%m%d).tar.gz data/
+
+# Backup configuration
+cp .env.production .env.production.backup
+
+# Recovery
+tar -xzf backup-YYYYMMDD.tar.gz
+docker-compose up -d
+```
+
+## Security Considerations
+
+### Production Security Checklist
+
+- [ ] Change default passwords and secrets
+- [ ] Configure proper CORS origins
+- [ ] Enable SSL/TLS
+- [ ] Set up proper firewall rules
+- [ ] Configure rate limiting
+- [ ] Enable security headers
+- [ ] Set up log monitoring
+- [ ] Regular security updates
+- [ ] Container image scanning
+- [ ] Network segmentation
+
+### Security Updates
+
+```bash
+# Update base images
+docker-compose pull
+docker-compose up -d
+
+# Update application
+git pull origin main
+docker-compose build --no-cache
+docker-compose up -d
+
+# Security audit
+npm audit
+docker scan shortwavereport:latest
+```
+
+## Support
+
+For deployment issues:
+
+1. Check this documentation
+2. Review application logs
+3. Consult the troubleshooting section
+4. Create an issue in the repository
+
+## License
+
+This deployment guide is part of the Shortwavereport project and follows the same license terms.

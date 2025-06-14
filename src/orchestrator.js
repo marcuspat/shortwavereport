@@ -3,11 +3,14 @@
  * Coordinates all agents using BatchTool patterns for parallel execution
  */
 
+import express from 'express';
 import MemoryManager from './memory/memory-manager.js';
 import SDRDiscoveryAgent from './agents/sdr-discovery.js';
 import AudioCaptureAgent from './agents/audio-capture.js';
 import AudioAnalysisAgent from './agents/audio-analysis.js';
 import ReportGeneratorAgent from './agents/report-generator.js';
+import aiService from './utils/ai-service.js';
+import aiConfig from './config/ai-config.js';
 
 class SPARCOrchestrator {
   constructor() {
@@ -20,6 +23,268 @@ class SPARCOrchestrator {
     };
     this.executionLog = [];
     this.startTime = null;
+    this.healthServer = null;
+    this.isHealthy = true;
+    this.initializeHealthServer();
+  }
+
+  /**
+   * Initialize health check endpoints
+   */
+  initializeHealthServer() {
+    const app = express();
+    const port = process.env.HEALTH_PORT || 3000;
+
+    // Middleware for parsing JSON
+    app.use(express.json());
+
+    // Health check endpoint
+    app.get('/health', (req, res) => {
+      const healthStatus = this.getHealthStatus();
+      const statusCode = healthStatus.status === 'healthy' ? 200 : 503;
+      res.status(statusCode).json(healthStatus);
+    });
+
+    // Readiness check endpoint
+    app.get('/ready', (req, res) => {
+      const readinessStatus = this.getReadinessStatus();
+      const statusCode = readinessStatus.ready ? 200 : 503;
+      res.status(statusCode).json(readinessStatus);
+    });
+
+    // Liveness check endpoint
+    app.get('/live', (req, res) => {
+      res.status(200).json({
+        status: 'alive',
+        timestamp: new Date().toISOString(),
+        uptime: process.uptime()
+      });
+    });
+
+    // Metrics endpoint
+    app.get('/metrics', async (req, res) => {
+      const metrics = await this.getMetrics();
+      res.status(200).json(metrics);
+    });
+
+    // System status endpoint
+    app.get('/status', async (req, res) => {
+      const status = await this.getSystemStatus();
+      res.status(200).json(status);
+    });
+
+    // AI service endpoints
+    app.get('/ai/status', async (req, res) => {
+      try {
+        const status = aiService.getProviderStatus();
+        const config = aiConfig.getConfigSummary();
+        res.status(200).json({ ...status, config });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get('/ai/models', (req, res) => {
+      try {
+        const models = aiService.getAvailableModels();
+        const freeModels = aiConfig.getFreeModels();
+        res.status(200).json({ available: models, free: freeModels });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.get('/ai/setup', (req, res) => {
+      try {
+        const instructions = aiConfig.getSetupInstructions();
+        const detection = aiConfig.autoDetectBestSetup();
+        res.status(200).json({ instructions, detection });
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    app.post('/ai/test', async (req, res) => {
+      try {
+        const testResult = await aiService.testProvider();
+        res.status(200).json(testResult);
+      } catch (error) {
+        res.status(500).json({ success: false, error: error.message });
+      }
+    });
+
+    app.post('/ai/analyze', async (req, res) => {
+      try {
+        const { prompt, options = {} } = req.body;
+        if (!prompt) {
+          return res.status(400).json({ error: 'Prompt is required' });
+        }
+
+        const result = await aiService.generateCompletion(prompt, options);
+        res.status(200).json(result);
+      } catch (error) {
+        res.status(500).json({ error: error.message });
+      }
+    });
+
+    // Start health server
+    this.healthServer = app.listen(port, () => {
+      console.log(`🏥 Health server running on port ${port}`);
+    });
+  }
+
+  /**
+   * Get comprehensive health status
+   */
+  getHealthStatus() {
+    const memoryUsage = process.memoryUsage();
+    const memoryThreshold = 1024 * 1024 * 1024; // 1GB threshold
+
+    return {
+      status: this.isHealthy && memoryUsage.heapUsed < memoryThreshold ? 'healthy' : 'unhealthy',
+      timestamp: new Date().toISOString(),
+      uptime: process.uptime(),
+      memory: {
+        used: Math.round(memoryUsage.heapUsed / 1024 / 1024),
+        total: Math.round(memoryUsage.heapTotal / 1024 / 1024),
+        external: Math.round(memoryUsage.external / 1024 / 1024)
+      },
+      cpu: {
+        usage: process.cpuUsage()
+      },
+      agents: {
+        sdrDiscovery: this.agents.sdrDiscovery ? 'initialized' : 'not_initialized',
+        audioCapture: this.agents.audioCapture ? 'initialized' : 'not_initialized',
+        audioAnalysis: this.agents.audioAnalysis ? 'initialized' : 'not_initialized',
+        reportGenerator: this.agents.reportGenerator ? 'initialized' : 'not_initialized'
+      },
+      version: process.version,
+      platform: process.platform
+    };
+  }
+
+  /**
+   * Get readiness status (ready to accept requests)
+   */
+  getReadinessStatus() {
+    const allAgentsReady = Object.values(this.agents).every(agent => agent !== null);
+    const memoryReady = this.memory !== null;
+
+    return {
+      ready: allAgentsReady && memoryReady && this.isHealthy,
+      timestamp: new Date().toISOString(),
+      checks: {
+        agents: allAgentsReady,
+        memory: memoryReady,
+        health: this.isHealthy
+      }
+    };
+  }
+
+  /**
+   * Get system metrics
+   */
+  async getMetrics() {
+    const memoryUsage = process.memoryUsage();
+    const executionStats = this.getExecutionStats();
+    
+    return {
+      timestamp: new Date().toISOString(),
+      system: {
+        uptime: process.uptime(),
+        memory: {
+          heap_used: memoryUsage.heapUsed,
+          heap_total: memoryUsage.heapTotal,
+          external: memoryUsage.external,
+          rss: memoryUsage.rss
+        },
+        cpu: process.cpuUsage(),
+        node_version: process.version,
+        platform: process.platform
+      },
+      orchestrator: {
+        execution_time: this.startTime ? (Date.now() - this.startTime) / 1000 : 0,
+        total_executions: executionStats.total,
+        successful_executions: executionStats.successful,
+        failed_executions: executionStats.failed,
+        phases_completed: executionStats.phases
+      },
+      agents: await this.getAgentMetrics()
+    };
+  }
+
+  /**
+   * Get comprehensive system status
+   */
+  async getSystemStatus() {
+    const health = this.getHealthStatus();
+    const readiness = this.getReadinessStatus();
+    const metrics = await this.getMetrics();
+    const memoryStats = await this.getMemoryStats();
+
+    return {
+      overall_status: health.status === 'healthy' && readiness.ready ? 'operational' : 'degraded',
+      timestamp: new Date().toISOString(),
+      health,
+      readiness,
+      metrics,
+      memory_stats: memoryStats,
+      execution_log: this.executionLog.slice(-10) // Last 10 entries
+    };
+  }
+
+  /**
+   * Get execution statistics
+   */
+  getExecutionStats() {
+    const stats = {
+      total: this.executionLog.length,
+      successful: 0,
+      failed: 0,
+      phases: 0
+    };
+
+    this.executionLog.forEach(entry => {
+      if (entry.status === 'completed') stats.successful++;
+      if (entry.status === 'failed') stats.failed++;
+      if (entry.component.startsWith('phase_')) stats.phases++;
+    });
+
+    return stats;
+  }
+
+  /**
+   * Get agent-specific metrics
+   */
+  async getAgentMetrics() {
+    const metrics = {};
+    
+    for (const [name, agent] of Object.entries(this.agents)) {
+      metrics[name] = {
+        initialized: agent !== null,
+        status: agent ? 'ready' : 'not_ready'
+      };
+    }
+
+    return metrics;
+  }
+
+  /**
+   * Get memory system statistics
+   */
+  async getMemoryStats() {
+    try {
+      const keys = await this.memory.list();
+      return {
+        total_keys: keys.length,
+        last_updated: new Date().toISOString()
+      };
+    } catch (error) {
+      return {
+        error: 'Unable to retrieve memory stats',
+        message: error.message
+      };
+    }
   }
 
   /**
@@ -473,6 +738,13 @@ class SPARCOrchestrator {
    */
   async shutdown() {
     console.log('\n🛑 Shutting down SPARC Orchestrator...');
+    
+    // Shutdown health server
+    if (this.healthServer) {
+      this.healthServer.close(() => {
+        console.log('🏥 Health server stopped');
+      });
+    }
     
     // Shutdown report server if running
     if (this.agents.reportGenerator.server) {

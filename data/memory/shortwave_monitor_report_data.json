@@ -1,7 +1,7 @@
 {
   "key": "report_data",
   "data": {
-    "timestamp": "2025-06-13T12:58:54.389Z",
+    "timestamp": "2025-06-14T22:38:18.867Z",
     "activeSDRs": [
       {
         "url": "http://websdr.ewi.utwente.nl:8901/",
@@ -14,7 +14,7 @@
           "10m"
         ],
         "quality_score": 95,
-        "last_checked": "2025-06-13T12:58:54.386Z",
+        "last_checked": "2025-06-14T22:38:18.860Z",
         "network": "WebSDR",
         "status": "online",
         "response_time": 850
@@ -30,7 +30,7 @@
           "10m"
         ],
         "quality_score": 88,
-        "last_checked": "2025-06-13T12:58:54.387Z",
+        "last_checked": "2025-06-14T22:38:18.861Z",
         "network": "WebSDR",
         "status": "online",
         "response_time": 1200
@@ -46,7 +46,7 @@
           "10m"
         ],
         "quality_score": 82,
-        "last_checked": "2025-06-13T12:58:54.387Z",
+        "last_checked": "2025-06-14T22:38:18.861Z",
         "network": "KiwiSDR",
         "status": "online",
         "response_time": 750
@@ -69,7 +69,7 @@
             "W1ABC"
           ],
           "quality_score": 85,
-          "timestamp": "2025-06-13T12:58:54.387Z",
+          "timestamp": "2025-06-14T22:38:18.861Z",
           "confidence": 88
         },
         "playable": true
@@ -90,7 +90,7 @@
             "BBC World Service"
           ],
           "quality_score": 78,
-          "timestamp": "2025-06-13T12:58:54.387Z",
+          "timestamp": "2025-06-14T22:38:18.861Z",
           "confidence": 95
         },
         "playable": true
@@ -111,7 +111,7 @@
             "K6XYZ"
           ],
           "quality_score": 92,
-          "timestamp": "2025-06-13T12:58:54.387Z",
+          "timestamp": "2025-06-14T22:38:18.861Z",
           "confidence": 82
         },
         "playable": true
@@ -127,7 +127,7 @@
           "bandwidth": 3000,
           "duration": 60,
           "sampleRate": 16000,
-          "timestamp": "2025-06-13T12:58:54.387Z",
+          "timestamp": "2025-06-14T22:38:18.861Z",
           "quality_estimate": 85
         },
         "analysis_results": {
@@ -138,7 +138,7 @@
             "W1ABC"
           ],
           "quality_score": 85,
-          "timestamp": "2025-06-13T12:58:54.387Z",
+          "timestamp": "2025-06-14T22:38:18.861Z",
           "confidence": 88
         }
       },
@@ -151,7 +151,7 @@
           "bandwidth": 5000,
           "duration": 60,
           "sampleRate": 16000,
-          "timestamp": "2025-06-13T12:58:54.387Z",
+          "timestamp": "2025-06-14T22:38:18.861Z",
           "quality_estimate": 78
         },
         "analysis_results": {
@@ -162,7 +162,7 @@
             "BBC World Service"
           ],
           "quality_score": 78,
-          "timestamp": "2025-06-13T12:58:54.387Z",
+          "timestamp": "2025-06-14T22:38:18.861Z",
           "confidence": 95
         }
       },
@@ -175,7 +175,7 @@
           "bandwidth": 500,
           "duration": 60,
           "sampleRate": 16000,
-          "timestamp": "2025-06-13T12:58:54.387Z",
+          "timestamp": "2025-06-14T22:38:18.861Z",
           "quality_estimate": 92
         },
         "analysis_results": {
@@ -186,7 +186,7 @@
             "K6XYZ"
           ],
           "quality_score": 92,
-          "timestamp": "2025-06-13T12:58:54.387Z",
+          "timestamp": "2025-06-14T22:38:18.861Z",
           "confidence": 82
         }
       }
@@ -253,7 +253,7 @@
               "10m"
             ],
             "quality_score": 95,
-            "last_checked": "2025-06-13T12:58:54.386Z",
+            "last_checked": "2025-06-14T22:38:18.860Z",
             "network": "WebSDR",
             "status": "online",
             "response_time": 850
@@ -271,7 +271,7 @@
               "10m"
             ],
             "quality_score": 88,
-            "last_checked": "2025-06-13T12:58:54.387Z",
+            "last_checked": "2025-06-14T22:38:18.861Z",
             "network": "WebSDR",
             "status": "online",
             "response_time": 1200
@@ -289,7 +289,7 @@
               "10m"
             ],
             "quality_score": 82,
-            "last_checked": "2025-06-13T12:58:54.387Z",
+            "last_checked": "2025-06-14T22:38:18.861Z",
             "network": "KiwiSDR",
             "status": "online",
             "response_time": 750
@@ -328,6 +328,6 @@
       "trends": []
     }
   },
-  "timestamp": "2025-06-13T12:58:54.429Z",
+  "timestamp": "2025-06-14T22:38:18.949Z",
   "namespace": "shortwave_monitor"
 }

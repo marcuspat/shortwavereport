@@ -2,7 +2,7 @@
   "key": "report_ready",
   "data": {
     "url": "http://localhost:3000",
-    "timestamp": "2025-06-13T12:58:54.429Z",
+    "timestamp": "2025-06-14T22:38:18.951Z",
     "summary": {
       "totalSDRs": 3,
       "totalSamples": 3,
@@ -52,6 +52,6 @@
     },
     "signal": true
   },
-  "timestamp": "2025-06-13T12:58:54.429Z",
+  "timestamp": "2025-06-14T22:38:18.951Z",
   "namespace": "shortwave_monitor"
 }

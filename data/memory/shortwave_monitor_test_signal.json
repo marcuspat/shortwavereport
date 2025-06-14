@@ -1,0 +1,10 @@
+{
+  "key": "test_signal",
+  "data": {
+    "message": "test complete",
+    "signal": true,
+    "timestamp": "2025-06-14T22:31:57.604Z"
+  },
+  "timestamp": "2025-06-14T22:31:57.604Z",
+  "namespace": "shortwave_monitor"
+}

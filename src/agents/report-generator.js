@@ -1,16 +1,26 @@
 /**
  * Report Generator Agent - SPARC Phase 4
  * Creates intelligence reports and web dashboard
+ * Enhanced with AI-powered report generation using OpenRouter/OpenAI APIs
  */
 
 import fs from 'fs/promises';
 import path from 'path';
 import express from 'express';
+import helmet from 'helmet';
+import rateLimit from 'express-rate-limit';
+import passport from 'passport';
 import MemoryManager from '../memory/memory-manager.js';
+import ResilienceManager from '../utils/resilience-manager.js';
+import aiService from '../utils/ai-service.js';
+import AuthenticationManager from '../middleware/auth.js';
+import HTMLSanitizer from '../utils/html-sanitizer.js';
+import { validateInput, schemas } from '../utils/validation.js';
 
 class ReportGeneratorAgent {
   constructor() {
     this.memory = new MemoryManager();
+    this.resilience = new ResilienceManager();
     this.reportsDir = path.join(process.cwd(), 'src', 'reports');
     this.reportData = {
       summary: {},
@@ -322,33 +332,269 @@ class ReportGeneratorAgent {
   }
 
   /**
-   * Deploy report as web server
+   * Deploy report as secure web server
    */
   async deployReport() {
     const app = express();
     const port = process.env.PORT || 3000;
+    const auth = new AuthenticationManager();
 
-    // Serve static files
-    app.use(express.static(this.reportsDir));
-    app.use('/data', express.static(path.join(process.cwd(), 'data')));
+    // Security middleware
+    app.use(helmet({
+      contentSecurityPolicy: {
+        directives: {
+          defaultSrc: ["'self'"],
+          styleSrc: ["'self'", "'unsafe-inline'"],
+          scriptSrc: ["'self'"],
+          imgSrc: ["'self'", "data:"],
+          connectSrc: ["'self'"],
+          fontSrc: ["'self'"],
+          objectSrc: ["'none'"],
+          mediaSrc: ["'self'"],
+          frameSrc: ["'none'"],
+        },
+      },
+      hsts: {
+        maxAge: 31536000,
+        includeSubDomains: true,
+        preload: true
+      }
+    }));
+
+    // Rate limiting
+    const generalLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 100, // 100 requests per window per IP
+      message: { error: 'Too many requests, please try again later' },
+      standardHeaders: true,
+      legacyHeaders: false
+    });
+
+    const authLimiter = rateLimit({
+      windowMs: 15 * 60 * 1000, // 15 minutes
+      max: 5, // 5 login attempts per window
+      message: { error: 'Too many login attempts, please try again later' }
+    });
+
+    app.use('/api/', generalLimiter);
+    app.use(express.json({ limit: '10mb' }));
+    app.use(express.urlencoded({ extended: true, limit: '10mb' }));
+
+    // Authentication setup
+    app.use(auth.getSessionMiddleware());
+    app.use(...auth.getPassportMiddleware());
+
+    // Public login page
+    app.get('/login', (req, res) => {
+      res.send(this.generateLoginPage());
+    });
+
+    // Login endpoint
+    app.post('/login', authLimiter, (req, res, next) => {
+      try {
+        validateInput(req.body, schemas.userCredentials);
+        next();
+      } catch (error) {
+        return res.status(400).json({ error: error.message });
+      }
+    }, (req, res, next) => {
+      // Use passport authentication
+      passport.authenticate('local', (err, user, info) => {
+        if (err) {
+          return res.status(500).json({ error: 'Authentication error' });
+        }
+        if (!user) {
+          return res.status(401).json({ error: info.message || 'Invalid credentials' });
+        }
+        
+        req.logIn(user, (err) => {
+          if (err) {
+            return res.status(500).json({ error: 'Login failed' });
+          }
+          res.json({ 
+            message: 'Login successful', 
+            user: { username: user.username, role: user.role }
+          });
+        });
+      })(req, res, next);
+    });
+
+    // Logout endpoint
+    app.post('/logout', (req, res) => {
+      req.logout(() => {
+        res.json({ message: 'Logout successful' });
+      });
+    });
+
+    // Protected routes
+    app.use(auth.requireAuth);
+
+    // Secure static file serving for reports
+    app.use('/reports', this.createSecureFileMiddleware(['html', 'css', 'js']), 
+      express.static(this.reportsDir));
+
+    // Admin-only data access
+    app.use('/data', auth.requireRole('admin'), 
+      this.createSecureFileMiddleware(['wav', 'json', 'log']),
+      express.static(path.join(process.cwd(), 'data')));
 
     // Main dashboard route
     app.get('/', (req, res) => {
       res.sendFile(path.join(this.reportsDir, 'dashboard.html'));
     });
 
-    // API endpoint for data
-    app.get('/api/data', (req, res) => {
-      res.json(this.reportData);
+    // API endpoints with role-based access
+    app.get('/api/data', auth.requireRole('monitor'), (req, res) => {
+      try {
+        const sanitizedData = HTMLSanitizer.sanitizeForDisplay(this.reportData);
+        res.json(sanitizedData);
+      } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
+    app.get('/api/summary', auth.requireRole('monitor'), (req, res) => {
+      try {
+        const sanitizedSummary = HTMLSanitizer.sanitizeForDisplay(this.reportData.summary);
+        res.json(sanitizedSummary);
+      } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
+    // Admin endpoints
+    app.get('/api/admin/users', auth.requireRole('admin'), (req, res) => {
+      try {
+        const users = auth.getUsers();
+        res.json(users);
+      } catch (error) {
+        res.status(500).json({ error: 'Internal server error' });
+      }
+    });
+
+    app.post('/api/admin/users', auth.requireRole('admin'), async (req, res) => {
+      try {
+        const validatedData = validateInput(req.body, schemas.userCredentials);
+        const user = await auth.addUser(validatedData.username, validatedData.password, req.body.role || 'monitor');
+        res.json({ message: 'User created successfully', user });
+      } catch (error) {
+        res.status(400).json({ error: error.message });
+      }
+    });
+
+    // Error handling middleware
+    app.use((error, req, res, next) => {
+      console.error('Server error:', error);
+      res.status(500).json({ 
+        error: process.env.NODE_ENV === 'production' ? 'Internal server error' : error.message 
+      });
     });
 
     return new Promise((resolve) => {
       this.server = app.listen(port, () => {
         const url = `http://localhost:${port}`;
-        console.log(`🌐 Report server started at ${url}`);
+        console.log(`🔐 Secure report server started at ${url}`);
+        console.log(`🔑 Default credentials: admin/SecureAdmin123! or monitor/MonitorPass456!`);
         resolve(url);
       });
     });
+  }
+
+  /**
+   * Create secure file serving middleware
+   */
+  createSecureFileMiddleware(allowedExtensions) {
+    return (req, res, next) => {
+      const requestedPath = req.path;
+      const extension = path.extname(requestedPath).substring(1).toLowerCase();
+      
+      // Check allowed extensions
+      if (!allowedExtensions.includes(extension)) {
+        return res.status(403).json({ error: 'File type not allowed' });
+      }
+      
+      // Prevent path traversal
+      if (requestedPath.includes('..') || requestedPath.includes('~')) {
+        return res.status(403).json({ error: 'Invalid file path' });
+      }
+      
+      next();
+    };
+  }
+
+  /**
+   * Generate secure login page
+   */
+  generateLoginPage() {
+    return `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Shortwave Monitor - Login</title>
+    <style>
+        body { font-family: Arial, sans-serif; background: #f0f2f5; margin: 0; padding: 20px; }
+        .login-container { max-width: 400px; margin: 100px auto; background: white; padding: 40px; border-radius: 8px; box-shadow: 0 2px 10px rgba(0,0,0,0.1); }
+        .logo { text-align: center; margin-bottom: 30px; color: #1e3c72; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 5px; font-weight: bold; }
+        input { width: 100%; padding: 10px; border: 1px solid #ddd; border-radius: 4px; font-size: 16px; }
+        button { width: 100%; padding: 12px; background: #1e3c72; color: white; border: none; border-radius: 4px; font-size: 16px; cursor: pointer; }
+        button:hover { background: #2a5298; }
+        .error { color: red; margin-top: 10px; display: none; }
+        .security-notice { font-size: 12px; color: #666; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <div class="login-container">
+        <div class="logo">
+            <h1>📡 Shortwave Monitor</h1>
+            <p>Secure Access Portal</p>
+        </div>
+        <form id="loginForm">
+            <div class="form-group">
+                <label for="username">Username:</label>
+                <input type="text" id="username" name="username" required autocomplete="username">
+            </div>
+            <div class="form-group">
+                <label for="password">Password:</label>
+                <input type="password" id="password" name="password" required autocomplete="current-password">
+            </div>
+            <button type="submit">Login</button>
+            <div class="error" id="error"></div>
+        </form>
+        <div class="security-notice">
+            🔒 This system is protected by authentication and encryption.
+        </div>
+    </div>
+    <script>
+        document.getElementById('loginForm').addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const formData = new FormData(e.target);
+            const data = { username: formData.get('username'), password: formData.get('password') };
+            
+            try {
+                const response = await fetch('/login', {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/json' },
+                    body: JSON.stringify(data)
+                });
+                
+                if (response.ok) {
+                    window.location.href = '/';
+                } else {
+                    const error = await response.json();
+                    document.getElementById('error').textContent = error.error;
+                    document.getElementById('error').style.display = 'block';
+                }
+            } catch (error) {
+                document.getElementById('error').textContent = 'Login failed. Please try again.';
+                document.getElementById('error').style.display = 'block';
+            }
+        });
+    </script>
+</body>
+</html>`;
   }
 
   /**
@@ -384,13 +630,13 @@ class ReportGeneratorAgent {
       <div class="coverage-grid">
         ${regions.map(([region, sdrs]) => `
           <div class="region-card">
-            <h4>${region}</h4>
-            <p>${sdrs.length} SDRs</p>
+            <h4>${HTMLSanitizer.escapeHtml(region)}</h4>
+            <p>${parseInt(sdrs.length)} SDRs</p>
             <div class="region-details">
               ${sdrs.map(sdr => `
                 <div class="sdr-item">
-                  <span class="location">${sdr.location}</span>
-                  <span class="quality">${sdr.quality_score}/100</span>
+                  <span class="location">${HTMLSanitizer.escapeHtml(sdr.location)}</span>
+                  <span class="quality">${HTMLSanitizer.sanitizeQualityScore(sdr.quality_score)}/100</span>
                 </div>
               `).join('')}
             </div>
@@ -410,8 +656,8 @@ class ReportGeneratorAgent {
           <div class="chart">
             ${Object.entries(analysis.contentTypes).map(([type, count]) => `
               <div class="bar">
-                <div class="bar-fill" style="width: ${(count / this.reportData.totalAnalyses) * 100}%"></div>
-                <span class="bar-label">${type}: ${count}</span>
+                <div class="bar-fill" style="width: ${Math.max(0, Math.min(100, (parseInt(count) / (this.reportData.totalAnalyses || 1)) * 100))}%"></div>
+                <span class="bar-label">${HTMLSanitizer.escapeHtml(type)}: ${parseInt(count)}</span>
               </div>
             `).join('')}
           </div>
@@ -420,12 +666,15 @@ class ReportGeneratorAgent {
         <div class="chart-container">
           <h4>Languages Detected</h4>
           <div class="chart">
-            ${Object.entries(analysis.languages).map(([lang, count]) => `
-              <div class="bar">
-                <div class="bar-fill" style="width: ${(count / Object.values(analysis.languages).reduce((a, b) => a + b, 0)) * 100}%"></div>
-                <span class="bar-label">${lang}: ${count}</span>
-              </div>
-            `).join('')}
+            ${Object.entries(analysis.languages).map(([lang, count]) => {
+              const total = Object.values(analysis.languages).reduce((a, b) => parseInt(a) + parseInt(b), 0);
+              return `
+                <div class="bar">
+                  <div class="bar-fill" style="width: ${Math.max(0, Math.min(100, (parseInt(count) / (total || 1)) * 100))}%"></div>
+                  <span class="bar-label">${HTMLSanitizer.escapeHtml(lang)}: ${parseInt(count)}</span>
+                </div>
+              `;
+            }).join('')}
           </div>
         </div>
       </div>
@@ -436,10 +685,12 @@ class ReportGeneratorAgent {
     const { analysis } = this.reportData;
     const allStations = [];
     
-    Object.entries(analysis.stationsByType).forEach(([type, stations]) => {
-      stations.forEach(station => {
-        allStations.push({ station, type });
-      });
+    Object.entries(analysis.stationsByType || {}).forEach(([type, stations]) => {
+      if (Array.isArray(stations)) {
+        stations.forEach(station => {
+          allStations.push({ station, type });
+        });
+      }
     });
     
     const uniqueStations = [...new Map(allStations.map(item => [item.station, item])).values()];
@@ -457,8 +708,8 @@ class ReportGeneratorAgent {
           <tbody>
             ${uniqueStations.slice(0, 20).map(item => `
               <tr>
-                <td>${item.station}</td>
-                <td>${item.type}</td>
+                <td>${HTMLSanitizer.sanitizeCallsign(item.station)}</td>
+                <td>${HTMLSanitizer.escapeHtml(item.type)}</td>
                 <td>Active</td>
               </tr>
             `).join('')}
@@ -471,18 +722,18 @@ class ReportGeneratorAgent {
   generateAudioSamples() {
     return `
       <div class="samples-grid">
-        ${this.reportData.audioSamples.map(sample => `
+        ${(this.reportData.audioSamples || []).map(sample => `
           <div class="sample-card">
-            <h4>${sample.filename}</h4>
+            <h4>${HTMLSanitizer.escapeHtml(sample.filename || 'Unknown')}</h4>
             <div class="sample-details">
-              <p><strong>SDR:</strong> ${sample.sdr}</p>
-              <p><strong>Frequency:</strong> ${(sample.frequency / 1000000).toFixed(2)} MHz</p>
-              <p><strong>Type:</strong> ${sample.type}</p>
-              <p><strong>Quality:</strong> ${sample.quality}/100</p>
+              <p><strong>SDR:</strong> ${HTMLSanitizer.escapeHtml(sample.sdr || 'Unknown')}</p>
+              <p><strong>Frequency:</strong> ${HTMLSanitizer.sanitizeFrequency(sample.frequency) ? (sample.frequency / 1000000).toFixed(2) : '0.00'} MHz</p>
+              <p><strong>Type:</strong> ${HTMLSanitizer.escapeHtml(sample.type || 'Unknown')}</p>
+              <p><strong>Quality:</strong> ${HTMLSanitizer.sanitizeQualityScore(sample.quality)}/100</p>
               ${sample.analysis ? `
-                <p><strong>Content:</strong> ${sample.analysis.content_type}</p>
-                <p><strong>Language:</strong> ${sample.analysis.language}</p>
-                <p><strong>Confidence:</strong> ${sample.analysis.confidence}%</p>
+                <p><strong>Content:</strong> ${HTMLSanitizer.escapeHtml(sample.analysis.content_type || 'Unknown')}</p>
+                <p><strong>Language:</strong> ${HTMLSanitizer.escapeHtml(sample.analysis.language || 'Unknown')}</p>
+                <p><strong>Confidence:</strong> ${HTMLSanitizer.sanitizeQualityScore(sample.analysis.confidence)}%</p>
               ` : ''}
             </div>
           </div>

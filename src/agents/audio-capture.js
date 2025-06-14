@@ -1,6 +1,7 @@
 /**
  * Audio Capture Agent - SPARC Phase 2
  * Captures audio samples from WebSDR instances
+ * Enhanced with resilience mechanisms: retry logic, circuit breakers, graceful degradation
  */
 
 import fs from 'fs/promises';
@@ -8,10 +9,15 @@ import path from 'path';
 import fetch from 'node-fetch';
 import { spawn } from 'child_process';
 import MemoryManager from '../memory/memory-manager.js';
+import ResilienceManager from '../utils/resilience-manager.js';
+import { SDRClientFactory } from '../utils/websdr-client.js';
+import SecureCommandExecutor from '../utils/secure-command.js';
+import { validateInput, schemas } from '../utils/validation.js';
 
 class AudioCaptureAgent {
   constructor() {
     this.memory = new MemoryManager();
+    this.resilience = new ResilienceManager();
     this.audioDir = path.join(process.cwd(), 'data', 'audio');
     this.capturedSamples = [];
     this.captureConfig = {
@@ -154,14 +160,24 @@ class AudioCaptureAgent {
   async captureFrequency(sdr, config) {
     console.log(`🎙️ Capturing ${config.type} from ${sdr.location} at ${config.frequency/1000000} MHz`);
     
+    // Validate inputs
+    const validatedSDR = validateInput(sdr, schemas.sdr);
+    const validatedConfig = validateInput(config, schemas.audioConfig);
+    
     const timestamp = new Date().toISOString().replace(/[:.]/g, '-');
-    const filename = `${config.type}_${sdr.location.replace(/[^a-zA-Z0-9]/g, '_')}_${timestamp}.wav`;
-    const filepath = path.join(this.audioDir, filename);
+    const safeLocation = SecureCommandExecutor.sanitizeFilename(validatedSDR.location);
+    const filename = `${validatedConfig.type}_${safeLocation}_${timestamp}.wav`;
+    const filepath = SecureCommandExecutor.validatePath(path.join(this.audioDir, filename));
 
     try {
-      // For WebSDR, we need to simulate audio capture since we can't directly access WebAudio API
-      // In a real implementation, this would interface with the WebSDR's audio stream
-      const audioData = await this.simulateAudioCapture(sdr, config);
+      // Try real audio capture first, fallback to simulation on failure
+      let audioData;
+      try {
+        audioData = await this.realAudioCapture(sdr, config);
+      } catch (realCaptureError) {
+        console.log(`⚠️ Real capture failed, using fallback: ${realCaptureError.message}`);
+        audioData = await this.simulateAudioCapture(sdr, config);
+      }
       
       if (audioData) {
         await fs.writeFile(filepath, audioData);
@@ -190,27 +206,71 @@ class AudioCaptureAgent {
   }
 
   /**
-   * Simulate audio capture (placeholder for real WebSDR integration)
+   * Real audio capture from WebSDR/KiwiSDR
+   */
+  async realAudioCapture(sdr, config) {
+    console.log(`🎙️ Real capture from ${sdr.url} at ${config.frequency} Hz`);
+    
+    return await this.resilience.executeResilientOperation({
+      operationId: 'real_audio_capture',
+      serviceType: 'websdr_connection',
+      operation: async () => {
+        const client = SDRClientFactory.createClient(sdr);
+        
+        try {
+          // Connect to SDR
+          await client.connect();
+          
+          // Set frequency and mode
+          await client.setFrequency(config.frequency, config.mode);
+          
+          // Capture audio for specified duration
+          const durationMs = this.captureConfig.duration * 1000;
+          const audioData = await client.startCapture(durationMs);
+          
+          console.log(`✅ Captured ${audioData.length} bytes from ${sdr.location}`);
+          return audioData;
+          
+        } finally {
+          client.disconnect();
+        }
+      },
+      operationConfig: { sdrUrl: sdr.url }
+    });
+  }
+
+  /**
+   * Fallback simulated audio capture for testing/demo
    */
   async simulateAudioCapture(sdr, config) {
-    // In a real implementation, this would:
-    // 1. Connect to WebSDR's WebSocket or audio stream
-    // 2. Set frequency and mode
-    // 3. Capture audio data for specified duration
-    // 4. Return raw audio data
+    console.log(`🔧 Fallback simulation for ${sdr.url} at ${config.frequency} Hz`);
     
-    console.log(`🔧 Simulating capture from ${sdr.url} at ${config.frequency} Hz`);
-    
-    // Generate placeholder audio data (silence)
+    // Generate more realistic audio data with basic signal patterns
     const sampleRate = this.captureConfig.sampleRate;
     const duration = this.captureConfig.duration;
     const numSamples = sampleRate * duration;
     const buffer = Buffer.alloc(numSamples * 2); // 16-bit samples
     
-    // Add some random noise to simulate audio
+    // Generate different patterns based on mode
     for (let i = 0; i < numSamples; i++) {
-      const sample = Math.floor((Math.random() - 0.5) * 1000); // Low-level noise
-      buffer.writeInt16LE(sample, i * 2);
+      let sample = 0;
+      
+      if (config.mode === 'cw') {
+        // Generate CW-like pattern
+        const time = i / sampleRate;
+        sample = Math.sin(2 * Math.PI * 800 * time) * 
+                 (Math.sin(2 * Math.PI * 5 * time) > 0 ? 0.3 : 0) * 32767;
+      } else if (config.mode === 'usb' || config.mode === 'am') {
+        // Generate voice-like pattern with background noise
+        const noise = (Math.random() - 0.5) * 1000;
+        const tone = Math.sin(2 * Math.PI * 1000 * i / sampleRate) * 5000;
+        sample = noise + (Math.random() > 0.9 ? tone : 0);
+      } else {
+        // Background noise
+        sample = (Math.random() - 0.5) * 1000;
+      }
+      
+      buffer.writeInt16LE(Math.floor(sample), i * 2);
     }
     
     return buffer;
@@ -245,31 +305,22 @@ class AudioCaptureAgent {
   }
 
   /**
-   * Process audio with ffmpeg
+   * Process audio with secure ffmpeg execution
    */
   async processWithFFmpeg(inputPath, outputPath) {
-    return new Promise((resolve, reject) => {
-      const ffmpeg = spawn('ffmpeg', [
-        '-i', inputPath,
-        '-ar', this.captureConfig.sampleRate.toString(),
-        '-ac', this.captureConfig.channels.toString(),
-        '-acodec', 'pcm_s16le',
-        '-y', // Overwrite output file
-        outputPath
-      ]);
-
-      ffmpeg.on('close', (code) => {
-        if (code === 0) {
-          resolve();
-        } else {
-          reject(new Error(`FFmpeg process exited with code ${code}`));
-        }
-      });
-
-      ffmpeg.on('error', (error) => {
-        reject(new Error(`FFmpeg error: ${error.message}`));
-      });
-    });
+    try {
+      console.log(`🔒 Secure FFmpeg processing: ${inputPath} -> ${outputPath}`);
+      
+      // Use secure command executor
+      const result = await SecureCommandExecutor.executeFFmpeg(inputPath, outputPath, this.captureConfig);
+      
+      console.log(`✅ FFmpeg processing completed successfully`);
+      return result;
+      
+    } catch (error) {
+      console.error(`❌ Secure FFmpeg processing failed: ${error.message}`);
+      throw error;
+    }
   }
 
   /**

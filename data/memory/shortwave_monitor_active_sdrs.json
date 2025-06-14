@@ -2,54 +2,70 @@
   "key": "active_sdrs",
   "data": [
     {
-      "url": "http://websdr.ewi.utwente.nl:8901/",
-      "location": "University of Twente, Netherlands",
+      "url": "http://localhost:8901/",
+      "location": "Netherlands Test Station",
       "frequencies": [
-        "80m",
-        "40m",
-        "20m",
-        "15m",
-        "10m"
+        "80m (3.5-4.0 MHz)",
+        "40m (7.0-7.3 MHz)",
+        "20m (14.0-14.35 MHz)",
+        "15m (21.0-21.45 MHz)",
+        "10m (28.0-29.7 MHz)"
       ],
-      "quality_score": 95,
-      "last_checked": "2025-06-13T12:58:54.386Z",
+      "quality_score": 100,
+      "last_checked": "2025-06-14T23:06:23.360Z",
       "network": "WebSDR",
-      "status": "online",
-      "response_time": 850
+      "response_time": 7,
+      "status": "online"
     },
     {
-      "url": "http://rx.linkfanel.net/",
-      "location": "Hungary",
+      "url": "http://localhost:8902/",
+      "location": "Germany Test Station",
       "frequencies": [
-        "80m",
-        "40m",
-        "20m",
-        "15m",
-        "10m"
+        "80m (3.5-4.0 MHz)",
+        "40m (7.0-7.3 MHz)",
+        "20m (14.0-14.35 MHz)",
+        "15m (21.0-21.45 MHz)",
+        "10m (28.0-29.7 MHz)"
       ],
-      "quality_score": 88,
-      "last_checked": "2025-06-13T12:58:54.387Z",
+      "quality_score": 100,
+      "last_checked": "2025-06-14T23:06:23.360Z",
       "network": "WebSDR",
-      "status": "online",
-      "response_time": 1200
+      "response_time": 7,
+      "status": "online"
     },
     {
-      "url": "http://kiwisdr.example.com:8073/",
-      "location": "California, USA",
+      "url": "http://localhost:8903/",
+      "location": "Japan Test Station",
       "frequencies": [
-        "80m",
-        "40m",
-        "20m",
-        "15m",
-        "10m"
+        "80m (3.5-4.0 MHz)",
+        "40m (7.0-7.3 MHz)",
+        "20m (14.0-14.35 MHz)",
+        "15m (21.0-21.45 MHz)",
+        "10m (28.0-29.7 MHz)"
       ],
-      "quality_score": 82,
-      "last_checked": "2025-06-13T12:58:54.387Z",
+      "quality_score": 90,
+      "last_checked": "2025-06-14T23:06:23.360Z",
       "network": "KiwiSDR",
-      "status": "online",
-      "response_time": 750
+      "response_time": 11,
+      "status": "online"
+    },
+    {
+      "url": "http://openwebrx.de/",
+      "location": "Germany",
+      "frequencies": [
+        "80m (3.5-4.0 MHz)",
+        "40m (7.0-7.3 MHz)",
+        "20m (14.0-14.35 MHz)",
+        "15m (21.0-21.45 MHz)",
+        "10m (28.0-29.7 MHz)"
+      ],
+      "quality_score": 70,
+      "last_checked": "2025-06-14T23:06:23.360Z",
+      "network": "OpenWebRX",
+      "response_time": 1095,
+      "status": "online"
     }
   ],
-  "timestamp": "2025-06-13T12:58:54.387Z",
+  "timestamp": "2025-06-14T23:06:24.458Z",
   "namespace": "shortwave_monitor"
 }

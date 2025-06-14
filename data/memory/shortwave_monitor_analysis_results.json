@@ -10,7 +10,7 @@
         "bandwidth": 3000,
         "duration": 60,
         "sampleRate": 16000,
-        "timestamp": "2025-06-13T12:58:54.387Z",
+        "timestamp": "2025-06-14T22:39:16.630Z",
         "quality_estimate": 85
       },
       "analysis_results": {
@@ -21,7 +21,7 @@
           "W1ABC"
         ],
         "quality_score": 85,
-        "timestamp": "2025-06-13T12:58:54.387Z",
+        "timestamp": "2025-06-14T22:39:16.630Z",
         "confidence": 88
       }
     },
@@ -34,7 +34,7 @@
         "bandwidth": 5000,
         "duration": 60,
         "sampleRate": 16000,
-        "timestamp": "2025-06-13T12:58:54.387Z",
+        "timestamp": "2025-06-14T22:39:16.630Z",
         "quality_estimate": 78
       },
       "analysis_results": {
@@ -45,7 +45,7 @@
           "BBC World Service"
         ],
         "quality_score": 78,
-        "timestamp": "2025-06-13T12:58:54.387Z",
+        "timestamp": "2025-06-14T22:39:16.630Z",
         "confidence": 95
       }
     },
@@ -58,7 +58,7 @@
         "bandwidth": 500,
         "duration": 60,
         "sampleRate": 16000,
-        "timestamp": "2025-06-13T12:58:54.387Z",
+        "timestamp": "2025-06-14T22:39:16.630Z",
         "quality_estimate": 92
       },
       "analysis_results": {
@@ -69,11 +69,11 @@
           "K6XYZ"
         ],
         "quality_score": 92,
-        "timestamp": "2025-06-13T12:58:54.387Z",
+        "timestamp": "2025-06-14T22:39:16.630Z",
         "confidence": 82
       }
     }
   ],
-  "timestamp": "2025-06-13T12:58:54.388Z",
+  "timestamp": "2025-06-14T22:39:16.636Z",
   "namespace": "shortwave_monitor"
 }

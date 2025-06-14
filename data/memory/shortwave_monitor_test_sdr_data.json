@@ -1,0 +1,10 @@
+{
+  "key": "test_sdr_data",
+  "data": {
+    "sdr": "test-sdr",
+    "location": "Test Location",
+    "quality": 85
+  },
+  "timestamp": "2025-06-14T22:31:57.602Z",
+  "namespace": "shortwave_monitor"
+}

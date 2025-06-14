@@ -1,0 +1,14 @@
+{
+  "key": "mission_complete",
+  "data": {
+    "execution_time": 120.5,
+    "summary": {
+      "sdrs_discovered": 5,
+      "samples_captured": 20,
+      "analyses_completed": 15,
+      "report_generated": true
+    }
+  },
+  "timestamp": "2025-06-14T22:31:57.596Z",
+  "namespace": "shortwave_monitor"
+}

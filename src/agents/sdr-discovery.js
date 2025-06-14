@@ -1,15 +1,18 @@
 /**
  * SDR Discovery Agent - SPARC Phase 1
  * Identifies and monitors WebSDR/KiwiSDR receivers
+ * Enhanced with resilience mechanisms: retry logic, circuit breakers, rate limiting
  */
 
 import fetch from 'node-fetch';
 import { load } from 'cheerio';
 import MemoryManager from '../memory/memory-manager.js';
+import ResilienceManager from '../utils/resilience-manager.js';
 
 class SDRDiscoveryAgent {
   constructor() {
     this.memory = new MemoryManager();
+    this.resilience = new ResilienceManager();
     this.discoveredSDRs = [];
     this.maxConcurrentChecks = 5;
   }
@@ -20,41 +23,60 @@ class SDRDiscoveryAgent {
   async execute() {
     console.log('🔍 Starting SDR Discovery Phase...');
     
-    try {
-      // Parallel discovery of SDR networks
-      const discoveries = await Promise.allSettled([
-        this.discoverWebSDRs(),
-        this.discoverKiwiSDRs(),
-        this.discoverOpenWebRX()
-      ]);
+    return await this.resilience.executeResilientOperation({
+      operationId: 'sdr_discovery_main',
+      serviceType: 'sdr_discovery',
+      operation: async () => {
+        // Parallel discovery of SDR networks with resilience
+        const discoveryOperations = [
+          {
+            operationId: 'discover_websdr',
+            serviceType: 'sdr_discovery',
+            operation: () => this.discoverWebSDRs()
+          },
+          {
+            operationId: 'discover_kiwisdr',
+            serviceType: 'sdr_discovery', 
+            operation: () => this.discoverKiwiSDRs()
+          },
+          {
+            operationId: 'discover_openwebrx',
+            serviceType: 'sdr_discovery',
+            operation: () => this.discoverOpenWebRX()
+          }
+        ];
 
-      console.log('📡 Discovery results:');
-      discoveries.forEach((result, index) => {
+        const discoveries = await this.resilience.executeMultipleResilient(discoveryOperations);
+
+        console.log('📡 Discovery results:');
         const networks = ['WebSDR', 'KiwiSDR', 'OpenWebRX'];
-        if (result.status === 'fulfilled') {
-          console.log(`✅ ${networks[index]}: ${result.value.length} receivers found`);
-        } else {
-          console.log(`❌ ${networks[index]}: Discovery failed - ${result.reason.message}`);
-        }
-      });
+        discoveries.forEach((result, index) => {
+          if (result.status === 'fulfilled') {
+            console.log(`✅ ${networks[index]}: ${result.value.length} receivers found`);
+            this.discoveredSDRs.push(...result.value);
+          } else {
+            console.log(`❌ ${networks[index]}: Discovery failed - ${result.reason.message}`);
+          }
+        });
 
-      // Score and rank SDRs
-      await this.scoreSDRs();
-      
-      // Store results in memory
-      await this.memory.store('active_sdrs', this.discoveredSDRs);
-      await this.memory.signal('sdr_ready', { 
-        count: this.discoveredSDRs.length,
-        timestamp: new Date().toISOString()
-      });
+        // Score and rank SDRs with resilience
+        await this.resilience.executeResilientOperation({
+          operationId: 'score_sdrs',
+          serviceType: 'sdr_discovery',
+          operation: () => this.scoreSDRs()
+        });
+        
+        // Store results in memory
+        await this.memory.store('active_sdrs', this.discoveredSDRs);
+        await this.memory.signal('sdr_ready', { 
+          count: this.discoveredSDRs.length,
+          timestamp: new Date().toISOString()
+        });
 
-      console.log(`🎯 Discovery complete: ${this.discoveredSDRs.length} active SDRs found`);
-      return this.discoveredSDRs;
-
-    } catch (error) {
-      console.error('❌ SDR Discovery failed:', error);
-      throw error;
-    }
+        console.log(`🎯 Discovery complete: ${this.discoveredSDRs.length} active SDRs found`);
+        return this.discoveredSDRs;
+      }
+    });
   }
 
   /**
@@ -63,62 +85,64 @@ class SDRDiscoveryAgent {
   async discoverWebSDRs() {
     console.log('🌐 Scanning WebSDR.org network...');
     
-    try {
-      const response = await fetch('http://websdr.org/', {
-        timeout: 10000,
-        headers: { 'User-Agent': 'Shortwave-Monitor/1.0' }
-      });
-      
-      if (!response.ok) {
-        throw new Error(`WebSDR fetch failed: ${response.status}`);
-      }
-
-      const html = await response.text();
-      const $ = load(html);
-      const sdrs = [];
-
-      // Parse WebSDR list - looking for active receivers
-      $('a[href*="websdr"]').each((index, element) => {
-        const url = $(element).attr('href');
-        const text = $(element).text().trim();
+    return await this.resilience.executeResilientOperation({
+      operationId: 'websdr_discovery',
+      serviceType: 'websdr_connection',
+      operation: async () => {
+        const response = await fetch('http://websdr.org/', {
+          timeout: 10000,
+          headers: { 'User-Agent': 'Shortwave-Monitor/1.0' }
+        });
         
-        if (url && url.includes('websdr') && !url.includes('websdr.org')) {
-          sdrs.push({
-            url: url,
-            location: this.extractLocation(text),
-            frequencies: this.getDefaultHFBands(),
+        if (!response.ok) {
+          throw new Error(`WebSDR fetch failed: ${response.status}`);
+        }
+
+        const html = await response.text();
+        const $ = load(html);
+        const sdrs = [];
+
+        // Parse WebSDR list - looking for active receivers
+        $('a[href*="websdr"]').each((index, element) => {
+          const url = $(element).attr('href');
+          const text = $(element).text().trim();
+          
+          if (url && url.includes('websdr') && !url.includes('websdr.org')) {
+            sdrs.push({
+              url: url,
+              location: this.extractLocation(text),
+              frequencies: this.getDefaultHFBands(),
+              quality_score: 0,
+              last_checked: new Date().toISOString(),
+              network: 'WebSDR'
+            });
+          }
+        });
+
+        // Add known reliable WebSDRs
+        sdrs.push(
+          {
+            url: 'http://websdr.ewi.utwente.nl:8901/',
+            location: 'University of Twente, Netherlands',
+            frequencies: ['80m', '40m', '20m', '15m', '10m'],
             quality_score: 0,
             last_checked: new Date().toISOString(),
             network: 'WebSDR'
-          });
-        }
-      });
+          },
+          {
+            url: 'http://rx.linkfanel.net/',
+            location: 'Hungary',
+            frequencies: ['80m', '40m', '20m', '15m', '10m'],
+            quality_score: 0,
+            last_checked: new Date().toISOString(),
+            network: 'WebSDR'
+          }
+        );
 
-      // Add known reliable WebSDRs
-      sdrs.push(
-        {
-          url: 'http://websdr.ewi.utwente.nl:8901/',
-          location: 'University of Twente, Netherlands',
-          frequencies: ['80m', '40m', '20m', '15m', '10m'],
-          quality_score: 0,
-          last_checked: new Date().toISOString(),
-          network: 'WebSDR'
-        },
-        {
-          url: 'http://rx.linkfanel.net/',
-          location: 'Hungary',
-          frequencies: ['80m', '40m', '20m', '15m', '10m'],
-          quality_score: 0,
-          last_checked: new Date().toISOString(),
-          network: 'WebSDR'
-        }
-      );
-
-      return sdrs;
-    } catch (error) {
-      console.error('WebSDR discovery error:', error);
-      return [];
-    }
+        return sdrs;
+      },
+      operationConfig: { sdrUrl: 'http://websdr.org/' }
+    });
   }
 
   /**

@@ -1,16 +1,21 @@
 /**
  * Audio Analysis Agent - SPARC Phase 3
  * Processes captured audio for intelligence extraction
+ * Enhanced with AI-powered analysis using OpenRouter/OpenAI APIs
  */
 
 import fs from 'fs/promises';
 import path from 'path';
 import { spawn } from 'child_process';
 import MemoryManager from '../memory/memory-manager.js';
+import ResilienceManager from '../utils/resilience-manager.js';
+import aiService from '../utils/ai-service.js';
 
 class AudioAnalysisAgent {
   constructor() {
     this.memory = new MemoryManager();
+    this.resilience = new ResilienceManager();
+    this.aiAnalysis = aiService;
     this.analysisDir = path.join(process.cwd(), 'data', 'analysis');
     this.analysisResults = [];
     this.initializeAnalysisDir();
@@ -128,23 +133,24 @@ class AudioAnalysisAgent {
     };
 
     try {
-      // Determine analysis type based on sample type
-      switch (sample.config.type) {
-        case 'hf_voice':
-          analysis.analysis_results = await this.analyzeVoice(sample);
-          break;
-        case 'broadcast':
-          analysis.analysis_results = await this.analyzeBroadcast(sample);
-          break;
-        case 'cw_digital':
-          analysis.analysis_results = await this.analyzeCWDigital(sample);
-          break;
-        case 'utility':
-          analysis.analysis_results = await this.analyzeUtility(sample);
-          break;
-        default:
-          analysis.analysis_results = await this.analyzeGeneric(sample);
-      }
+      // Use AI analysis service for comprehensive analysis
+      const audioFilePath = sample.processed_filepath || sample.filepath;
+      const aiResults = await this.aiAnalysis.analyzeAudio(audioFilePath, sample.config.type);
+      
+      // Convert AI results to our analysis format
+      analysis.analysis_results = {
+        content_type: aiResults.content_type,
+        language: aiResults.language,
+        transcription: aiResults.transcription,
+        stations: aiResults.stations,
+        quality_score: aiResults.quality_score,
+        timestamp: aiResults.timestamp,
+        confidence: aiResults.confidence,
+        ai_details: aiResults.details || {},
+        error: aiResults.error
+      };
+      
+      console.log(`🤖 AI Analysis: ${aiResults.content_type} (${aiResults.confidence}% confidence)`);
 
       // Save analysis to file
       const analysisFile = path.join(this.analysisDir, `${sample.id}_analysis.json`);
